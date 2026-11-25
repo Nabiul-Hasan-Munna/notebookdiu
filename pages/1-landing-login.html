@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UniverseDIU - Landing & Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body class="bg-[#060e22] text-white min-h-screen flex flex-col justify-between relative overflow-x-hidden selection:bg-blue-500 selection:text-white">
+
+  <!-- Background Imagery & Effects -->
+  <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+    <div class="absolute -top-40 -left-40 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl"></div>
+    <div class="absolute top-1/3 -right-20 w-80 h-80 bg-cyan-500/15 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-0 left-0 right-0 h-96 bg-gradient-to-t from-[#060e22] via-[#060e22]/80 to-transparent z-10"></div>
+    <img src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=1600&auto=format&fit=crop&q=80" 
+         alt="DIU Campus" 
+         class="w-full h-full object-cover object-bottom opacity-20 filter contrast-125" />
+  </div>
+
+  <!-- Header -->
+  <header class="relative z-20 w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 p-0.5 flex items-center justify-center shadow-lg shadow-blue-500/30">
+        <div class="w-full h-full bg-[#0b1a3c] rounded-[10px] flex items-center justify-center">
+          <svg class="w-6 h-6 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="6"/>
+            <ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(-30 12 12)"/>
+          </svg>
+        </div>
+      </div>
+      <div>
+        <span class="text-xl font-extrabold tracking-tight text-white">Universe<span class="text-cyan-400">DIU</span></span>
+        <p class="text-[10px] text-cyan-300 font-semibold tracking-widest uppercase">Learn • Share • Grow</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <a href="11-admin-dashboard.html" class="text-xs text-slate-300 hover:text-white px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors">Admin Portal</a>
+      <a href="2-home-feed.html" class="text-xs bg-white/10 hover:bg-white/20 text-white font-medium px-4 py-2 rounded-xl backdrop-blur-sm border border-white/15 transition-all">Explore Platform</a>
+    </div>
+  </header>
+
+  <!-- Main Hero & Login Card Grid -->
+  <main class="relative z-20 w-full max-w-7xl mx-auto px-6 py-8 my-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+    <!-- Left Hero -->
+    <section class="lg:col-span-7 space-y-6">
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-400/30 text-cyan-300 text-xs font-semibold backdrop-blur-md">
+        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+        DIU Exclusive Academic Ecosystem
+      </div>
+
+      <h1 class="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-[1.1] text-white">
+        Your Knowledge <br/>
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-teal-300">Our Universe</span>
+      </h1>
+
+      <p class="text-base md:text-lg text-slate-300 max-w-xl leading-relaxed">
+        A university-exclusive platform where Daffodil International University students share curated resources, ask questions, access course archives, and build academic excellence together.
+      </p>
+
+      <div class="flex flex-wrap items-center gap-4 pt-2">
+        <a href="2-home-feed.html" class="px-7 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl shadow-lg shadow-blue-600/30 transition-all transform hover:-translate-y-0.5 flex items-center gap-2">
+          <span>Login to Portal</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+        </a>
+        <a href="2-home-feed.html" class="px-7 py-3.5 bg-white/10 hover:bg-white/15 text-white font-semibold rounded-xl border border-white/20 backdrop-blur-md transition-all">
+          Create Account
+        </a>
+      </div>
+
+      <div class="pt-8 border-t border-slate-700/50 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center justify-center text-cyan-400 font-bold text-lg">
+          DIU
+        </div>
+        <div>
+          <h4 class="text-xs font-bold text-slate-200">Daffodil International University</h4>
+          <p class="text-[11px] text-slate-400">Ashulia Permanent Campus • Exclusive for DIU Students</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Login Card -->
+    <section class="lg:col-span-5">
+      <div class="bg-white text-slate-800 rounded-3xl p-8 shadow-2xl shadow-black/50 border border-slate-100 relative">
+        <div class="mb-6">
+          <h2 class="text-2xl font-bold tracking-tight text-slate-900">Welcome Back</h2>
+          <p class="text-xs text-slate-500 mt-1">Login to your UniverseDIU account</p>
+        </div>
+
+        <form action="2-home-feed.html" method="GET" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Student ID or University Email</label>
+            <div class="relative">
+              <input type="text" 
+                     value="student@diu.edu.bd" 
+                     placeholder="student@diu.edu.bd" 
+                     class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 text-sm text-slate-800 transition-all outline-none" required />
+              <div class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Password</label>
+            <div class="relative">
+              <input type="password" 
+                     value="12345678" 
+                     placeholder="••••••••••••" 
+                     class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 text-sm text-slate-800 transition-all outline-none" required />
+              <div class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between text-xs pt-0.5">
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" checked class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300" />
+              <span class="text-slate-600">Remember me</span>
+            </label>
+            <a href="#" class="text-blue-600 hover:text-blue-700 font-semibold">Forgot password?</a>
+          </div>
+
+          <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-md shadow-blue-500/20 transition-all mt-2">
+            Login
+          </button>
+
+          <div class="relative flex items-center justify-center my-4">
+            <div class="border-t border-slate-200 w-full"></div>
+            <span class="bg-white px-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">OR</span>
+          </div>
+
+          <a href="2-home-feed.html" class="w-full py-2.5 px-4 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all flex items-center justify-center gap-3 text-xs font-semibold text-slate-700">
+            <svg class="w-4 h-4" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+            <span>Continue with DIU Email</span>
+          </a>
+        </form>
+
+        <p class="text-center text-xs text-slate-500 mt-6">
+          Don't have an account? 
+          <a href="2-home-feed.html" class="text-blue-600 font-semibold hover:underline">Register</a>
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="relative z-20 w-full max-w-7xl mx-auto px-6 py-4 text-center text-[11px] text-slate-500">
+    UniverseDIU • Daffodil International University • Exclusive for DIU Students
+  </footer>
+
+</body>
+</html>
