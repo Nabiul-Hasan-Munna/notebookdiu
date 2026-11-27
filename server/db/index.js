@@ -25,6 +25,29 @@ export const query = {
 export async function initDatabase() {
   await pool.query("SELECT 1");
 
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS pending_registrations (
+      id INT NOT NULL AUTO_INCREMENT,
+      name VARCHAR(255) NOT NULL,
+      email VARCHAR(255) NOT NULL,
+      student_id VARCHAR(100) NOT NULL,
+      password_hash VARCHAR(255) NOT NULL,
+      department VARCHAR(255) DEFAULT 'Software Engineering',
+      batch VARCHAR(50) DEFAULT '43',
+      avatar_url TEXT,
+      code_hash CHAR(64) NOT NULL,
+      expires_at DATETIME NOT NULL,
+      attempts INT NOT NULL DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (id),
+      UNIQUE KEY uq_pending_email (email),
+      UNIQUE KEY uq_pending_student_id (student_id),
+      KEY idx_pending_expiry (expires_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS course_enrollments (
       id INT NOT NULL AUTO_INCREMENT,

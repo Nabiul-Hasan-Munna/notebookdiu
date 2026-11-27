@@ -380,48 +380,41 @@ console.log('[POST DEBUG] Uploaded files:', req.files?.length || 0);
     try {
       let courseId = null;
 
-      if (courseCode) {
-        const course = await query.get(
-          'SELECT id FROM courses WHERE code = ?',
-          courseCode
-        );
+if (courseCode) {
+  const course = await query.get(
+    'SELECT id FROM courses WHERE code = ?',
+    courseCode.trim().toUpperCase()
+  );
 
-        
-        if (type === "Resource" && course) {
-          courseId = course.id;
-        }
+  if (!course) {
+    for (const file of files) {
+      await unlink(file.path).catch(() => {});
+    }
 
-        // Course resources require valid course enrollment.
-        if (type === "Resource") {
-          if (!course) {
-            for (const file of files) {
-              await unlink(file.path).catch(() => {});
-            }
+    return res.status(404).json({
+      error: "Course not found."
+    });
+  }
 
-            return res.status(404).json({
-              error: "Course not found.",
-            });
-          }
+  const enrollment = await query.get(
+    `SELECT id FROM course_enrollments
+     WHERE user_id = ? AND course_id = ?`,
+    req.user.id,
+    course.id
+  );
 
-          const enrollment = await query.get(
-            `SELECT id FROM course_enrollments
-             WHERE user_id = ? AND course_id = ?`,
-            req.user.id,
-            course.id,
-          );
+  if (!enrollment) {
+    for (const file of files) {
+      await unlink(file.path).catch(() => {});
+    }
 
-          if (!enrollment) {
-            for (const file of files) {
-              await unlink(file.path).catch(() => {});
-            }
+    return res.status(403).json({
+      error: "You must be enrolled in this course to publish here."
+    });
+  }
 
-            return res.status(403).json({
-              error: "You must be enrolled in this course to upload resources.",
-            });
-          }
-        }
-
-      }
+  courseId = course.id;
+}
 
       const tagsJson = JSON.stringify(tags);
 

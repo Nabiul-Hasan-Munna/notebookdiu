@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+﻿import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ThumbsUp,
@@ -170,6 +170,14 @@ const attachments = post.attachments?.length
   : post.attachment
     ? [post.attachment]
     : [];
+
+const imageAttachments = attachments.filter(
+  attachment => attachment.type?.toLowerCase().startsWith('image/')
+);
+
+const documentAttachments = attachments.filter(
+  attachment => !attachment.type?.toLowerCase().startsWith('image/')
+);
 
 
 
@@ -358,7 +366,7 @@ const handleDeletePost = async () => {
   const handleShare = () => {
     const url = `${window.location.origin}/post/${post.id}`;
     navigator.clipboard.writeText(url);
-    showToast('Post link copied to clipboard! 📋');
+    showToast('Post link copied to clipboard! ðŸ“‹');
   };
 
   const getBadgeStyle = (type: string) => {
@@ -402,9 +410,9 @@ const handleDeletePost = async () => {
               <Link to={`/profile/${post.author.id}`} className="font-bold text-sm text-slate-900 hover:text-blue-600 transition-colors">
                 {post.author.name}
               </Link>
-              <span className="text-xs text-slate-400">• {post.author.meta.split('•')[1] || 'Batch 43'}</span>
+              <span className="text-xs text-slate-400">â€¢ {post.author.meta.split('â€¢')[1] || 'Batch 43'}</span>
             </div>
-            <p className="text-xs text-slate-500">{post.author.meta.split('•')[0] || 'Software Engineering'} • {new Date(post.createdAt).toLocaleDateString()}</p>
+            <p className="text-xs text-slate-500">{post.author.meta.split('â€¢')[0] || 'Software Engineering'} â€¢ {new Date(post.createdAt).toLocaleDateString()}</p>
           </div>
         </div>
 
@@ -653,120 +661,142 @@ const handleDeletePost = async () => {
         )}
       </div>
 
-      {/* Attachment Preview Card */}
-      {/* Multiple Attachment Preview Cards */}
+      {/* Image Gallery */}
+      {imageAttachments.length > 0 && (
+        <div className={`grid gap-2 overflow-hidden rounded-xl ${
+          imageAttachments.length === 1
+            ? 'grid-cols-1'
+            : imageAttachments.length === 2
+              ? 'grid-cols-2'
+              : 'grid-cols-3'
+        }`}>
+          {imageAttachments.slice(0, 3).map((attachment, index) => {
+            const imageUrl = attachment.id
+              ? imageUrls[attachment.id]
+              : null;
 
-{/* Multiple Attachment Preview Cards */}
-{attachments.length > 0 && (
-  <div className="space-y-3">
+            const isSingle = imageAttachments.length === 1;
+            const hasMore = index === 2 && imageAttachments.length > 3;
 
-    {attachments.map((attachment, index) => {
-      const isImage = attachment.type
-        ?.toLowerCase()
-        .startsWith('image/');
-
-      const imageUrl = attachment.id
-        ? imageUrls[attachment.id]
-        : null;
-
-      const isPDF =
-  attachment.type?.toLowerCase() === 'application/pdf';
-
-const pdfUrl = isPDF ? imageUrl : null;
-
-      return (
-        <div
-          key={attachment.id || index}
-          className="bg-slate-50 border border-slate-200/90 rounded-xl p-3.5 space-y-3"
-        >
-
-          {isImage && imageUrl && (
-            <button
-              type="button"
-              onClick={() => setSelectedImage(imageUrl)}
-              className="block w-full cursor-zoom-in overflow-hidden rounded-lg"
-            >
-              <img
-                src={imageUrl}
-                alt={attachment.name}
-                className="w-full max-h-[420px] object-contain rounded-lg bg-slate-100"
-              />
-            </button>
-          )}
-
-          {isImage && !imageUrl && (
-            <div className="w-full h-32 flex items-center justify-center bg-slate-100 rounded-lg text-sm text-slate-500">
-              Loading image preview...
-            </div>
-          )}
-
-
-{isPDF && pdfUrl && (
-  <div className="w-full overflow-hidden rounded-lg border border-slate-200 bg-white">
-    <iframe
-      src={pdfUrl}
-      title={`PDF Preview: ${attachment.name}`}
-      className="w-full h-[500px] border-0"
-    />
-  </div>
-)}
-
-{isPDF && !pdfUrl && (
-  <div className="w-full h-32 flex items-center justify-center bg-slate-100 rounded-lg text-sm text-slate-500">
-    Loading PDF preview...
-  </div>
-)}
-
-
-          <div className="flex items-center justify-between gap-3">
-
-            <div className="flex items-center gap-3 min-w-0">
+            return (
               <div
-                className={`w-10 h-10 shrink-0 rounded-lg flex items-center justify-center font-bold text-xs shadow-sm ${
-                  isImage
-                    ? 'bg-emerald-500 text-white'
-                    : attachment.type?.toUpperCase().includes('PDF')
-                      ? 'bg-rose-500 text-white'
-                      : 'bg-blue-600 text-white'
+                key={attachment.id || index}
+                className={`relative min-w-0 overflow-hidden ${
+                  isSingle ? 'rounded-lg' : 'aspect-[4/3] rounded-md'
                 }`}
               >
-                {isImage
-                  ? 'IMG'
-                  : attachment.type?.toUpperCase().includes('PDF')
-                    ? 'PDF'
-                    : attachment.type?.split('/').pop()?.toUpperCase().slice(0, 5) || 'FILE'}
+                {imageUrl ? (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedImage(imageUrl)}
+                    className="relative block w-full h-full cursor-zoom-in"
+                  >
+                    <img
+                      src={imageUrl}
+                      alt={attachment.name}
+                      className={`block w-full ${
+                        isSingle
+                          ? 'max-h-[420px] object-contain bg-slate-100'
+                          : 'h-40 sm:h-52 object-cover'
+                      }`}
+                    />
+
+                    {hasMore && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-white text-xl sm:text-2xl font-semibold">
+                        +{imageAttachments.length - 3} more
+                      </div>
+                    )}
+                  </button>
+                ) : (
+                  <div className="w-full h-40 flex items-center justify-center bg-slate-100 text-sm text-slate-500">
+                    Loading image preview...
+                  </div>
+                )}
               </div>
-
-              <div className="min-w-0">
-                <p className="text-xs font-bold text-slate-800 truncate">
-                  {attachment.name}
-                </p>
-
-                <p className="text-[11px] text-slate-500">
-                  {attachment.size} • Document {index + 1}
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={() => handleDownload(attachment)}
-              disabled={downloadingId === attachment.id}
-              className="shrink-0 px-3 py-1.5 rounded-lg border border-blue-600 text-blue-600 hover:bg-blue-50 text-xs font-semibold transition-colors disabled:opacity-50"
-            >
-              {downloadingId === attachment.id
-                ? 'Downloading...'
-                : 'Download'}
-            </button>
-
-          </div>
+            );
+          })}
         </div>
-      );
-    })}
+      )}
 
-  </div>
-)}
+      {/* Document Attachments */}
+      {documentAttachments.length > 0 && (
+        <div className={`grid gap-3 ${
+          documentAttachments.length === 1
+            ? 'grid-cols-1'
+            : documentAttachments.length === 2
+              ? 'grid-cols-1 sm:grid-cols-2'
+              : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+        }`}>
+          {documentAttachments.map((attachment, index) => {
+            const isPDF =
+              attachment.type?.toLowerCase() === 'application/pdf';
 
+            const pdfUrl = attachment.id
+              ? imageUrls[attachment.id]
+              : null;
 
+            return (
+              <div
+                key={attachment.id || index}
+                className="min-w-0 flex flex-col justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3"
+              >
+                <div className="flex items-center justify-between gap-2 min-w-0">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`w-10 h-10 shrink-0 rounded-lg flex items-center justify-center font-bold text-xs text-white ${
+                      isPDF ? 'bg-rose-500' : 'bg-blue-600'
+                    }`}>
+                      {isPDF
+                        ? 'PDF'
+                        : attachment.type?.split('/').pop()?.toUpperCase().slice(0, 5) || 'FILE'}
+                    </div>
+
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-slate-800 truncate">
+                        {attachment.name}
+                      </p>
+                      <p className="text-[11px] text-slate-500">
+                        {attachment.size} · Document {index + 1}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleDownload(attachment)}
+                    disabled={downloadingId === attachment.id}
+                    className="shrink-0 px-3 py-1.5 rounded-lg border border-blue-600 text-blue-600 hover:bg-blue-50 text-xs font-semibold transition-colors disabled:opacity-50"
+                  >
+                    {downloadingId === attachment.id
+                      ? 'Downloading...'
+                      : 'Download'}
+                  </button>
+                </div>
+
+                {isPDF && (
+                  <details className="text-xs text-slate-600">
+                    <summary className="cursor-pointer font-semibold hover:text-blue-600">
+                      Preview PDF
+                    </summary>
+                    <div className="mt-3">
+                      {pdfUrl ? (
+                        <iframe
+                          src={pdfUrl}
+                          title={`PDF Preview: ${attachment.name}`}
+                          className="w-full h-[350px] border border-slate-200 rounded-lg"
+                        />
+                      ) : (
+                        <p className="py-4 text-center">
+                          Loading PDF preview...
+                        </p>
+                      )}
+                    </div>
+                  </details>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
       {/* Interaction Footer */}
 
 {/* Full Screen Image Viewer */}
@@ -1039,3 +1069,4 @@ const pdfUrl = isPDF ? imageUrl : null;
 
   
 };
+

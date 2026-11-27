@@ -192,26 +192,66 @@ if (!isImage && !isPDF) {
     return URL.createObjectURL(blob);
   },
 
+  
   // Auth
-  async login(emailOrStudentId: string, password: string):Promise<{ token: string; user: User }> {
+  async login(
+    emailOrStudentId: string,
+    password: string
+  ): Promise<{ token: string; user: User }> {
     const res = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ emailOrStudentId, password })
     });
+
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Login failed');
     return data;
   },
 
-  async register(payload: { name: string; email: string; studentId: string; password: string; department?: string; batch?: string }): Promise<{ token: string; user: User }> {
+  async register(payload: {
+    name: string;
+    email: string;
+    studentId: string;
+    password: string;
+    department?: string;
+    batch?: string;
+  }): Promise<{ message: string; email: string }> {
     const res = await fetch(`${API_BASE}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
+
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Registration failed');
+    return data;
+  },
+
+  async verifyRegistration(
+    email: string,
+    code: string
+  ): Promise<{ token: string; user: User; message: string }> {
+    const res = await fetch(`${API_BASE}/auth/verify-registration`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, code })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Email verification failed');
+    return data;
+  },
+
+  async resendVerification(email: string): Promise<{ message: string }> {
+    const res = await fetch(`${API_BASE}/auth/resend-verification`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to resend verification code');
     return data;
   },
 
@@ -475,12 +515,35 @@ async deletePost(postId: number): Promise<{ message: string; postId: number }> {
     return data.courses || [];
   },
 
-  async getCourseByCode(code: string): Promise<{ course: Course; resources: any[] }> {
-    const res = await fetch(`${API_BASE}/courses/${code}`);
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to fetch course details');
-    return data;
-  },
+async getCourseByCode(code: string): Promise<{ course: Course; resources: any[] }> {
+  const res = await fetch(`${API_BASE}/courses/${code}`, {
+    headers: getAuthHeaders(),
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch course details');
+  return data;
+},
+
+async getCourseDiscussions(code: string): Promise<any[]> {
+  const res = await fetch(`${API_BASE}/courses/${code}/discussions`, {
+    headers: getAuthHeaders(),
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch discussions');
+  return data.discussions || [];
+},
+
+async getCourseMembers(code: string): Promise<any[]> {
+  const res = await fetch(`${API_BASE}/courses/${code}/members`, {
+    headers: getAuthHeaders(),
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch members');
+  return data.members || [];
+},
   async getEnrolledCourses(): Promise<Course[]> {
     const res = await fetch(`${API_BASE}/courses/enrolled`, {
       headers: getAuthHeaders(),

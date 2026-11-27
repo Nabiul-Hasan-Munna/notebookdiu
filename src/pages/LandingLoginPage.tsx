@@ -4,13 +4,18 @@ import { useAuth } from '../context/AuthContext';
 import { Eye, EyeOff, Sparkles, Check, ArrowRight } from 'lucide-react';
 
 export const LandingLoginPage: React.FC = () => {
-  const { login, register } = useAuth();
+ const { login, register, verifyRegistration, resendVerification } = useAuth();
   const navigate = useNavigate();
 
   const [isRegistering, setIsRegistering] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const [isVerifying, setIsVerifying] = useState(false);
+const [verificationCode, setVerificationCode] = useState('');
+const [pendingEmail, setPendingEmail] = useState('');
+const [resending, setResending] = useState(false);
 
   // Form fields
   const [emailOrId, setEmailOrId] = useState('student@diu.edu.bd');
@@ -20,31 +25,75 @@ export const LandingLoginPage: React.FC = () => {
   const [department, setDepartment] = useState('Software Engineering');
   const [batch, setBatch] = useState('43');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setLoading(true);
 
-    try {
-      if (isRegistering) {
-        await register({
-          name,
-          email: emailOrId,
-          studentId,
-          password,
-          department,
-          batch
-        });
-      } else {
-        await login(emailOrId, password);
-      }
-      navigate('/feed');
-    } catch (err: any) {
-      setError(err.message || 'Authentication failed. Please check credentials.');
-    } finally {
-      setLoading(false);
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError(null);
+  setLoading(true);
+
+  try {
+    if (isRegistering) {
+      const result = await register({
+        name,
+        email: emailOrId,
+        studentId,
+        password,
+        department,
+        batch
+      });
+
+      setPendingEmail(result.email);
+      setIsVerifying(true);
+      setVerificationCode('');
+      return;
     }
-  };
+
+    await login(emailOrId, password);
+    navigate('/feed');
+  } catch (err: any) {
+    setError(err.message || 'Authentication failed. Please check credentials.');
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+const handleVerifyEmail = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError(null);
+
+  if (!/^\d{6}$/.test(verificationCode)) {
+    setError('Please enter a valid six-digit code.');
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    await verifyRegistration(pendingEmail, verificationCode);
+    navigate('/feed');
+  } catch (err: any) {
+    setError(err.message || 'Email verification failed.');
+  } finally {
+    setLoading(false);
+  }
+};
+
+const handleResendCode = async () => {
+  setError(null);
+  setResending(true);
+
+  try {
+    await resendVerification(pendingEmail);
+    setVerificationCode('');
+    setError('A new verification code has been sent.');
+  } catch (err: any) {
+    setError(err.message || 'Could not resend verification code.');
+  } finally {
+    setResending(false);
+  }
+};
+
 
   const handleDemoFill = (role: 'student' | 'admin') => {
     if (role === 'admin') {
@@ -157,7 +206,11 @@ export const LandingLoginPage: React.FC = () => {
           <div className="bg-white text-slate-800 rounded-3xl p-8 shadow-2xl shadow-black/50 border border-slate-100 relative">
             <div className="mb-6">
               <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-                {isRegistering ? 'Join UniverseDIU' : 'Welcome Back'}
+                {isVerifying
+  ? 'Complete email verification to activate your account.'
+  : isRegistering
+    ? 'Register using your university email (@diu.edu.bd)'
+    : 'Login to your NoteBookDIU account'}
               </h2>
               <p className="text-xs text-slate-500 mt-1">
                 {isRegistering ? 'Register using your university email (@diu.edu.bd)' : 'Login to your UniverseDIU account'}
@@ -170,6 +223,7 @@ export const LandingLoginPage: React.FC = () => {
               </div>
             )}
 
+            {!isVerifying ? (
             <form onSubmit={handleSubmit} className="space-y-4">
               {isRegistering && (
                 <>
@@ -273,8 +327,81 @@ export const LandingLoginPage: React.FC = () => {
                 <span>Continue with DIU Email</span>
               </button>
             </form>
+) : (
+<form onSubmit={handleVerifyEmail} className="space-y-5">
 
-            <p className="text-center text-xs text-slate-500 mt-6">
+  <div className="text-center py-3">
+    <div className="mx-auto w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center mb-4">
+      <Check className="w-7 h-7 text-blue-600" />
+    </div>
+
+    <h3 className="text-xl font-bold text-slate-900">
+      Verify Your DIU Email
+    </h3>
+
+    <p className="text-xs text-slate-500 mt-2">
+      We sent a six-digit verification code to
+    </p>
+
+    <p className="text-sm font-semibold text-blue-600 mt-1 break-all">
+      {pendingEmail}
+    </p>
+  </div>
+
+  <div>
+    <label className="block text-xs font-semibold text-slate-700 mb-2">
+      Verification Code
+    </label>
+
+    <input
+      type="text"
+      inputMode="numeric"
+      autoComplete="one-time-code"
+      maxLength={6}
+      required
+      value={verificationCode}
+      onChange={(e) =>
+        setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))
+      }
+      placeholder="000000"
+      className="w-full px-4 py-4 rounded-xl border border-slate-200 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 text-center text-2xl tracking-[0.5em] font-bold text-slate-800 outline-none"
+    />
+  </div>
+
+  <button
+    type="submit"
+    disabled={loading || verificationCode.length !== 6}
+    className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-md transition-all disabled:opacity-50"
+  >
+    {loading ? 'Verifying...' : 'Verify Email & Continue'}
+  </button>
+
+  <button
+    type="button"
+    onClick={handleResendCode}
+    disabled={resending}
+    className="w-full py-2 text-sm font-semibold text-blue-600 hover:text-blue-700 disabled:opacity-50"
+  >
+    {resending ? 'Sending...' : 'Resend Verification Code'}
+  </button>
+
+  <button
+    type="button"
+    onClick={() => {
+      setIsVerifying(false);
+      setVerificationCode('');
+      setError(null);
+    }}
+    className="w-full text-xs text-slate-500 hover:text-slate-800"
+  >
+    Back to Registration
+  </button>
+
+</form>
+)}
+
+            {!isVerifying && (
+<p className="text-center text-xs text-slate-500 mt-6">
               {isRegistering ? 'Already have an account? ' : "Don't have an account? "}
               <button
                 type="button"
@@ -284,6 +411,7 @@ export const LandingLoginPage: React.FC = () => {
                 {isRegistering ? 'Login' : 'Register'}
               </button>
             </p>
+)}
           </div>
         </section>
       </main>

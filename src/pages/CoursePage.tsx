@@ -25,6 +25,20 @@ export const CoursePage: React.FC = () => {
   const [resourceFiles, setResourceFiles] = useState<File[]>([]);
   const [uploadingResource, setUploadingResource] = useState(false);
   const [uploadMessage, setUploadMessage] = useState('');
+    const [discussions, setDiscussions] = useState<any[]>([]);
+  const [members, setMembers] = useState<any[]>([]);
+  const [discussionTitle, setDiscussionTitle] = useState('');
+  const [discussionContent, setDiscussionContent] = useState('');
+  const [postingDiscussion, setPostingDiscussion] = useState(false);
+  const [discussionMessage, setDiscussionMessage] = useState('');
+  const [discussionLoading, setDiscussionLoading] = useState(false);
+  const [membersLoading, setMembersLoading] = useState(false);
+  const [memberSearch, setMemberSearch] = useState('');
+  const [expandedDiscussionId, setExpandedDiscussionId] = useState<number | null>(null);
+  const [commentsByPost, setCommentsByPost] = useState<Record<number, any[]>>({});
+  const [commentInputs, setCommentInputs] = useState<Record<number, string>>({});
+  const [replyingTo, setReplyingTo] = useState<{ postId: number; commentId: number } | null>(null);
+  const [commentLoading, setCommentLoading] = useState<number | null>(null);
 
   const loadCourse = async () => {
     setLoading(true);
@@ -116,6 +130,119 @@ export const CoursePage: React.FC = () => {
       setUploadingResource(false);
     }
   };
+
+    const loadDiscussions = async () => {
+    setDiscussionLoading(true);
+    try {
+      const data = await api.getCourseDiscussions(code);
+      setDiscussions(data);
+    } catch (err: any) {
+      setDiscussionMessage(err.message || 'Failed to load discussions.');
+    } finally {
+      setDiscussionLoading(false);
+    }
+  };
+
+  const loadMembers = async () => {
+    setMembersLoading(true);
+    try {
+      const data = await api.getCourseMembers(code);
+      setMembers(data);
+    } catch (err: any) {
+      setDiscussionMessage(err.message || 'Failed to load course members.');
+    } finally {
+      setMembersLoading(false);
+    }
+  };
+
+  const handleCreateDiscussion = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!discussionTitle.trim() || !discussionContent.trim() || postingDiscussion) {
+      return;
+    }
+
+    setPostingDiscussion(true);
+    setDiscussionMessage('');
+
+    try {
+      await api.createPost({
+        title: discussionTitle.trim(),
+        content: discussionContent.trim(),
+        type: 'Discussion',
+        courseCode: code
+      });
+
+      setDiscussionTitle('');
+      setDiscussionContent('');
+      setDiscussionMessage('Discussion published successfully.');
+      await loadDiscussions();
+    } catch (err: any) {
+      setDiscussionMessage(err.message || 'Failed to publish discussion.');
+    } finally {
+      setPostingDiscussion(false);
+    }
+  };
+
+  const loadPostComments = async (postId: number) => {
+    try {
+      const data = await api.getComments(postId);
+      setCommentsByPost(prev => ({
+        ...prev,
+        [postId]: data
+      }));
+    } catch (err: any) {
+      setDiscussionMessage(err.message || 'Failed to load comments.');
+    }
+  };
+
+  const toggleDiscussionComments = async (postId: number) => {
+    if (expandedDiscussionId === postId) {
+      setExpandedDiscussionId(null);
+      setReplyingTo(null);
+      return;
+    }
+
+    setExpandedDiscussionId(postId);
+    setReplyingTo(null);
+    await loadPostComments(postId);
+  };
+
+  const handleAddComment = async (postId: number) => {
+    const content = commentInputs[postId]?.trim();
+
+    if (!content || commentLoading === postId) return;
+
+    setCommentLoading(postId);
+
+    try {
+      const parentId =
+        replyingTo?.postId === postId ? replyingTo.commentId : undefined;
+
+      await api.addComment(postId, content, parentId);
+
+      setCommentInputs(prev => ({ ...prev, [postId]: '' }));
+      setReplyingTo(null);
+      await loadPostComments(postId);
+      await loadDiscussions();
+    } catch (err: any) {
+      setDiscussionMessage(err.message || 'Failed to add comment.');
+    } finally {
+      setCommentLoading(null);
+    }
+  };
+
+  useEffect(() => {
+    if (!enrolled) return;
+
+    if (activeTab === 'discussions') {
+      loadDiscussions();
+    }
+
+    if (activeTab === 'members') {
+      loadMembers();
+    }
+  }, [activeTab, enrolled, code]);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 pb-20">
@@ -360,17 +487,249 @@ export const CoursePage: React.FC = () => {
                 )}
 
 
-                {activeTab === 'discussions' && (
-                  <div className="bg-white rounded-2xl border border-slate-200 p-6">
-                    <h3 className="font-bold text-sm text-slate-900">Course Discussions</h3>
-                    <p className="text-xs text-slate-500 mt-2">Course discussions will appear here.</p>
+                                {activeTab === 'discussions' && (
+                  <div className="space-y-5">
+                    {enrolled && (
+                      <form
+                        onSubmit={handleCreateDiscussion}
+                        className="bg-white rounded-2xl border border-slate-200 p-6 space-y-3"
+                      >
+                        <h3 className="font-bold text-sm text-slate-900">
+                          Start a Course Discussion
+                        </h3>
+
+                        <input
+                          type="text"
+                          value={discussionTitle}
+                          onChange={e => setDiscussionTitle(e.target.value)}
+                          placeholder="Discussion title"
+                          className="w-full border border-slate-200 rounded-lg p-3 text-sm"
+                          required
+                        />
+
+                        <textarea
+                          value={discussionContent}
+                          onChange={e => setDiscussionContent(e.target.value)}
+                          placeholder="Share your question, idea or topic..."
+                          rows={4}
+                          className="w-full border border-slate-200 rounded-lg p-3 text-sm"
+                          required
+                        />
+
+                        <button
+                          type="submit"
+                          disabled={postingDiscussion}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-xs font-bold disabled:opacity-50"
+                        >
+                          {postingDiscussion ? 'Publishing...' : 'Publish Discussion'}
+                        </button>
+
+                        {discussionMessage && (
+                          <p className="text-xs text-slate-600">{discussionMessage}</p>
+                        )}
+                      </form>
+                    )}
+
+                    {!enrolled && (
+                      <div className="bg-white rounded-2xl border border-slate-200 p-6">
+                        <p className="text-sm text-slate-600">
+                          Enroll in this course to participate in discussions.
+                        </p>
+                      </div>
+                    )}
+
+                    {discussionLoading ? (
+                      <div className="bg-white rounded-2xl border p-6 text-center text-sm text-slate-500">
+                        Loading discussions...
+                      </div>
+                    ) : discussions.length === 0 ? (
+                      <div className="bg-white rounded-2xl border border-slate-200 p-6">
+                        <p className="text-sm text-slate-500">
+                          No discussions have been started yet.
+                        </p>
+                      </div>
+                    ) : (
+                      discussions.map(item => (
+                        <div
+                          key={item.id}
+                          className="bg-white rounded-2xl border border-slate-200 p-6 space-y-4"
+                        >
+                          <div>
+                            <h3 className="font-bold text-base text-slate-900">
+                              {item.title}
+                            </h3>
+                            <p className="text-xs text-slate-500 mt-1">
+                              {item.author_name || 'Student'}
+                              {item.author_department ? ` · ${item.author_department}` : ''}
+                              {' · '}
+                              {item.created_at
+                                ? new Date(item.created_at).toLocaleDateString()
+                                : ''}
+                            </p>
+                          </div>
+
+                          <p className="text-sm text-slate-700 whitespace-pre-wrap">
+                            {item.content}
+                          </p>
+
+                          <button
+                            type="button"
+                            onClick={() => toggleDiscussionComments(item.id)}
+                            className="text-xs font-bold text-blue-600 hover:text-blue-800"
+                          >
+                            <MessageSquare className="w-4 h-4 inline mr-1" />
+                            {item.comments_count || 0} Comments
+                            {expandedDiscussionId === item.id ? ' · Hide' : ' · View'}
+                          </button>
+
+                          {expandedDiscussionId === item.id && (
+                            <div className="border-t border-slate-100 pt-4 space-y-3">
+                              {(commentsByPost[item.id] || []).map((comment: any) => (
+                                <div
+                                  key={comment.id}
+                                  className={`rounded-lg bg-slate-50 p-3 ${
+                                    comment.parent_comment_id ? 'ml-6' : ''
+                                  }`}
+                                >
+                                  <p className="text-xs font-bold text-slate-800">
+                                    {comment.author_name || comment.name || 'Student'}
+                                  </p>
+                                  <p className="text-sm text-slate-700 mt-1 whitespace-pre-wrap">
+                                    {comment.content}
+                                  </p>
+                                  <button
+                                    type="button"
+                                    onClick={() => setReplyingTo({
+                                      postId: item.id,
+                                      commentId: comment.id
+                                    })}
+                                    className="text-xs text-blue-600 font-semibold mt-2"
+                                  >
+                                    Reply
+                                  </button>
+                                </div>
+                              ))}
+
+                              {replyingTo?.postId === item.id && (
+                                <p className="text-xs text-blue-600">
+                                  Replying to a comment
+                                  <button
+                                    type="button"
+                                    onClick={() => setReplyingTo(null)}
+                                    className="ml-2 underline"
+                                  >
+                                    Cancel
+                                  </button>
+                                </p>
+                              )}
+
+                              <textarea
+                                value={commentInputs[item.id] || ''}
+                                onChange={e => setCommentInputs(prev => ({
+                                  ...prev,
+                                  [item.id]: e.target.value
+                                }))}
+                                placeholder={
+                                  replyingTo?.postId === item.id
+                                    ? 'Write your reply...'
+                                    : 'Write a comment...'
+                                }
+                                rows={2}
+                                className="w-full border border-slate-200 rounded-lg p-3 text-sm"
+                              />
+
+                              <button
+                                type="button"
+                                onClick={() => handleAddComment(item.id)}
+                                disabled={commentLoading === item.id}
+                                className="bg-blue-600 text-white rounded-lg px-4 py-2 text-xs font-bold disabled:opacity-50"
+                              >
+                                {commentLoading === item.id ? 'Sending...' : 'Send'}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    )}
                   </div>
                 )}
 
-                {activeTab === 'members' && (
-                  <div className="bg-white rounded-2xl border border-slate-200 p-6">
-                    <h3 className="font-bold text-sm text-slate-900">Course Members</h3>
-                    <p className="text-xs text-slate-500 mt-2">Course members will appear here.</p>
+                                {activeTab === 'members' && (
+                  <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-bold text-sm text-slate-900">
+                          Course Members
+                        </h3>
+                        <p className="text-xs text-slate-500 mt-1">
+                          Students enrolled in {course.code}
+                        </p>
+                      </div>
+
+                      <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-bold">
+                        {members.length} Members
+                      </span>
+                    </div>
+
+                    <input
+                      type="text"
+                      value={memberSearch}
+                      onChange={e => setMemberSearch(e.target.value)}
+                      placeholder="Search members..."
+                      className="w-full border border-slate-200 rounded-lg p-3 text-sm"
+                    />
+
+                    {membersLoading ? (
+                      <p className="text-sm text-slate-500 text-center py-6">
+                        Loading members...
+                      </p>
+                    ) : members.filter(member =>
+                      `${member.name || ''} ${member.department || ''} ${member.batch || ''}`
+                        .toLowerCase()
+                        .includes(memberSearch.toLowerCase())
+                    ).length === 0 ? (
+                      <p className="text-sm text-slate-500 text-center py-6">
+                        No members found.
+                      </p>
+                    ) : (
+                      <div className="divide-y divide-slate-100">
+                        {members
+                          .filter(member =>
+                            `${member.name || ''} ${member.department || ''} ${member.batch || ''}`
+                              .toLowerCase()
+                              .includes(memberSearch.toLowerCase())
+                          )
+                          .map(member => (
+                            <div
+                              key={member.id}
+                              className="flex items-center gap-3 py-4"
+                            >
+                              {member.avatar_url ? (
+                                <img
+                                  src={member.avatar_url}
+                                  alt={member.name}
+                                  className="w-10 h-10 rounded-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                                  {(member.name || 'S').charAt(0).toUpperCase()}
+                                </div>
+                              )}
+
+                              <div>
+                                <p className="text-sm font-bold text-slate-800">
+                                  {member.name || 'Student'}
+                                </p>
+                                <p className="text-xs text-slate-500">
+                                  {[member.department, member.batch]
+                                    .filter(Boolean)
+                                    .join(' · ') || 'Student'}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -396,3 +755,4 @@ export const CoursePage: React.FC = () => {
     </div>
   );
 };
+
